@@ -1,0 +1,478 @@
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class Drawings extends MY_Controller
+{
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('form_validation');
+        $this->load->model('TIS_DSBL_model', 'sbl');
+        $this->load->model('TIS_PROJECT_model', 'project');
+        $this->load->model('TIS_DJOB_model', 'job');
+        $this->load->model('UD_WD_JOB_model', 'wd_job');
+        $this->load->model('UD_WD_CG_SUP_model', 'cg_sup');
+        $this->load->model('PDM_DOC_model', 'doc');
+        $this->load->model('UD_WD_DWG_SUP_model', 'dwg_sup');
+        $this->load->model('UD_WD_SUP_DOWN_model', 'sup_down');
+        $this->load->model('PDM_CG_LIB_model', 'cg_lib');
+        $this->load->model('TIS_MVENDOR_model', 'vender');
+        $this->load->model('PDM_ITEMS_model', 'item');
+        $this->load->model('PDM_DPC_CG_model', 'dpc_cg');
+        $this->load->library('file');
+    }
+
+    public function job_put()
+    {
+        $job1_code = $this->put('job1_code');
+        $job2_code = $this->put('job2_code');
+        $dwg_no = $this->put('dwg_no');
+        $old_dwg_no = $this->put('old_dwg_no');
+        $user_id = $this->put('user_id');
+        $where['job1_code'] = $job1_code;
+        $where['job2_code'] = $job2_code;
+        $where['dwg_no'] = $old_dwg_no;
+        $this->form_validation->set_data($where);
+        $this->form_validation->set_rules('job1_code', 'job1_code', 'required');
+        $this->form_validation->set_rules('job2_code', 'job2_code', 'required');
+        $this->form_validation->set_rules('dwg_no', 'dwg_no', 'required');
+        $where_validation = $this->form_validation->run();
+        $this->form_validation->reset_validation();
+        $data['dwg_no'] = $dwg_no;
+        $data['mod_user'] = $user_id;
+        $this->form_validation->set_data($data);
+        $this->form_validation->set_rules('dwg_no', 'dwg_no', 'required');
+        $this->form_validation->set_rules('mod_user', 'mod_user', 'required');
+        $data_validation = $this->form_validation->run();
+        if ($where_validation && $data_validation) {
+            $data['mod_date'] = date('Ymd');
+            $data['mod_time'] = date('His');
+            if ($this->wd_job->update(array_change_key_case($where, CASE_UPPER), array_change_key_case($data, CASE_UPPER))) {
+                $this->dwg_sup->delete_dwg_sup($old_dwg_no);
+                $response = create_response(TRUE);
+            } else {
+                $response = create_response(FALSE);
+            }
+        } else {
+            $response = create_response(FALSE);
+        }
+        
+        $this->response($response);
+    }
+
+    private function assign_supplier($dwg_no, $cg, $user_id)
+    {
+        $list1 = $list2 = array();
+        $cg_sup_code = $this->cg_sup->get_sup_code_by_cg($cg);
+        $dwg_sup_code = $this->dwg_sup->get('SUP_CODE', array(
+            'DWG_NO' => "${dwg_no}"
+        ));
+        foreach ($dwg_sup_code as $val) {
+            $list1[] = $val['SUP_CODE'];
+        }
+        foreach ($cg_sup_code as $val) {
+            $list2[] = $val['SUP_CODE'];
+        }
+        $list2 = array_unique($list2);
+        
+        $delete = array_diff($list1, $list2);
+        if (! empty($delete)) {
+            $this->dwg_sup->delete_dwg_sup($dwg_no, $delete);
+        }
+        $insert = array_diff($list2, $list1);
+        if (! empty($insert)) {
+            $this->dwg_sup->insert_sup_mapping($dwg_no, $insert, $user_id);
+        }
+    }
+
+    public function job_get()
+    {
+        $job1_code = $this->get('job1_code');
+        $job2_code = $this->get('job2_code');
+        $clas_kind = $this->get('clas_kind');
+        $user_id = $this->get('user_id');
+        $sup_code = $this->get('sup_code');
+        $level = $this->get('level');
+        $user_type = $this->get('user_type');
+        $project_name = $this->project->get_by_project_code($job1_code);
+        $job_info = $this->job->get_by_job_code($job1_code, $job2_code);
+        $job_list = $this->sbl->get_sbl_by_job($job1_code, $job2_code, $clas_kind, $user_id, $level);
+        $i = 1;
+        if ($job_list) {
+            switch ($user_type) {
+                case '1': // Supplier
+                case '4':
+                    foreach ($job_list as $key => &$val) {
+                        $count = $this->dwg_sup->count_rows_by_dwg_no_and_sup_code($val['DWG_NO'], $sup_code);
+                        if ($count == 1) {
+                            $val["SHOW_YN"] = "Y";
+                            
+                            $class_info = $this->doc->get_class_site($val['DWG_NO']);
+                            $val['CLASS_ID'] = $class_info['CLASS_ID'];
+                            $val['SITE_NAME'] = $class_info['SITE_NAME'];
+                            
+                            $my_rev = $this->sup_down->get_info($class_info['CLASS_ID'], $val['DWG_NO'], $sup_code);
+                            $val['REV1'] = $my_rev['REVISION'];
+                            
+                            $tke_rev = $this->doc->get_info($class_info['CLASS_ID'], $val['DWG_NO']);
+                            $val['REV2'] = ! isset($tke_rev['REVISION']) ? "" : trim($tke_rev['REVISION']) == "" ? '00' : $tke_rev['REVISION'];
+                        } else {
+                            $val["SHOW_YN"] = '';
+                            $val['CLASS_ID'] = '';
+                            $val['SITE_NAME'] = '';
+                            $val['REV1'] = '';
+                            $val['REV2'] = '';
+                        }
+                        $val['INDEX'] = $i;
+                        $i ++;
+                    }
+                    break;
+                case '2': // Admin
+                case '3': // Purchasing
+                    $cg = $this->cg_lib->get_list_mapping_cg($sup_code);
+                    if ($cg) {
+                        foreach ($cg as $key => $val) {
+                            $cg[$key] = $val['COMP_GROUP'];
+                        }
+                    }
+                    foreach ($job_list as $key => $val) {
+                        if ($cg && ! in_array($val['COMP_GROUP'], $cg)) {
+                            continue;
+                        } else {
+                            $dwg_no = $this->wd_job->get_dwg_no_by_jobcode_and_partcode($job1_code, $job2_code, $val['PART_CODE']);
+                            if ($dwg_no) {
+                                $val['DWG_NO'] = $dwg_no['DWG_NO'];
+                            } else {
+                                if ($val['DRAW_NO'] && trim($val['DRAW_NO']) != "") {
+                                    $val['DWG_NO'] = substr($val['DRAW_NO'], 0, - 4);
+                                }
+                            }
+                            if ($val['DWG_NO'] && $val['COMP_GROUP']) {
+                                $data_for_assign_supplier[$val['DWG_NO']][] = $val['COMP_GROUP'];
+                            }
+                        }
+                    }
+                    
+                    foreach ($data_for_assign_supplier as $key => $val) {
+                        $this->assign_supplier($key, array_unique($val), $user_id);
+                    }
+                    
+                    foreach ($job_list as $key => &$val) {
+                        if ($cg && ! in_array($val['COMP_GROUP'], $cg)) {
+                            continue;
+                        } else {
+                            $dwg_no = $this->wd_job->get_dwg_no_by_jobcode_and_partcode($job1_code, $job2_code, $val['PART_CODE']);
+                            if ($dwg_no) {
+                                $val['DWG_NO'] = $dwg_no['DWG_NO'];
+                            } else {
+                                if ($val['DRAW_NO'] && trim($val['DRAW_NO']) != "") {
+                                    $val['DWG_NO'] = substr($val['DRAW_NO'], 0, - 4);
+                                }
+                            }
+                            $list_sup_code = $this->dwg_sup->get_list_sup_codes($val['DWG_NO']);
+                            $cnt_sup = count($list_sup_code);
+                            $val['SUP_QTY'] = $cnt_sup;
+                            if ($cnt_sup == 1) {
+                                $val['SUP_CODE'] = $list_sup_code[0]['SUP_CODE'];
+                                $val['SUP_NAME'] = $this->vender->get_sup_names_by_code($list_sup_code);
+                            } elseif ($cnt_sup > 1) {
+                                $val['SUP_CODE'] = $list_sup_code[0]['SUP_CODE'] . $footer;
+                                $val['SUP_NAME'] = $this->vender->get_sup_names_by_code(array(
+                                    $list_sup_code[0]
+                                )) . $footer;
+                            }
+                            
+                            if ($cnt_sup > 0 && empty($dwg_no)) {
+                                $data = array(
+                                    'JOB1_CODE' => $job1_code,
+                                    'JOB2_CODE' => $job2_code,
+                                    'PART_CODE' => $val['PART_CODE'],
+                                    'CG' => $val['COMP_GROUP'],
+                                    'DWG_NO' => $val['DWG_NO'],
+                                    'CRT_USER' => $sup_code,
+                                    'CRT_DATE' => date('Ymd'),
+                                    'CRT_TIME' => date('His')
+                                );
+                                $this->wd_job->add($data);
+                            }
+                        }
+                        $val['INDEX'] = $i;
+                        $i ++;
+                    }
+                    
+                    break;
+                    $this->response(create_response(FALSE, 'invalid user type'));
+            }
+            
+            $search_info = array(
+                'job1_code' => $job1_code,
+                'job2_code' => $job2_code,
+                'clas_kind' => $clas_kind,
+                'job_qty' => $job_info['JOB_QTY'],
+                'project_name' => $project_name['PROJ_NAME'],
+                'production_class' => $job_info['E_KIND'],
+                'spec' => $job_info['SPEC'],
+                'level' => $level
+            );
+            $result = array(
+                'info' => $search_info,
+                'data' => $job_list
+            );
+            $response = create_response(TRUE, '', $result);
+        } else {
+            $response = create_response(FALSE, 'no data founded', $this->get());
+        }
+        $this->response($response);
+    }
+
+    public function sup_downs_get()
+    {
+        $dwg_no = $this->get('dwg_no');
+        if ($dwg_no) {
+            $class_id = $this->doc->get_class_id($dwg_no);
+            foreach ($class_id as $key => $val) {
+                $down_list = $this->doc->get_sup_down($dwg_no, $val['CLASS_ID']);
+                foreach ($down_list as &$v) {
+                    $down_info = $this->sup_down->get_download_info($v['OBJECT_ID'], $v['CLASS_ID']);
+                    $v['DOWN_D'] = $down_info['DOWN_D'];
+                    $v['DOWN_T'] = $down_info['DOWN_T'];
+                }
+                $data[] = $down_list;
+            }
+            if (! empty($data)) {
+                $response = create_response(TRUE, '', $data);
+            } else {
+                $response = create_response(FALSE);
+            }
+        } else {
+            $response = create_response(FALSE, 'No dwg no.');
+        }
+        $this->response($response);
+    }
+
+    public function project_drawing_get()
+    {
+        $folder_object_id = $this->get('folder_object_id');
+        $search_result = $this->doc->get_search_info($folder_object_id);
+        foreach ($search_result as $key => $value) {
+            $down_info = $this->sup_down->get_download_info($value['OBJECT_ID'], $value['CLASS_ID']);
+            $file_exists = $this->file->pdf_dwg_file_exists($value['FILE_NAME'], $value['SITE_NAME']);
+            $search_result[$key]['downdate'] = $down_info['DOWN_D'];
+            $search_result[$key]['downtime'] = $down_info['DOWN_T'];
+            $search_result[$key]['pdf'] = $file_exists['pdf'];
+            $search_result[$key]['dwg'] = $file_exists['dwg'];
+            $search_result[$key]['pdf_file_name'] = $file_exists['pdf_file_name'];
+        }
+        if ($search_result) {
+            $response = create_response(TRUE, '', $search_result);
+        } else {
+            $response = create_response(FALSE, 'no data founded', array(
+                $folder_object_id
+            ));
+        }
+        $this->response($response);
+    }
+
+    public function general_drawing_get()
+    {
+        $arr_dwg_no = $this->get('dwg_no');
+        $uid = $this->get('uid');
+        $revision_status = $this->get('revision_status');
+        foreach ($arr_dwg_no as $k => $v) {
+            // get CG general info
+            $cg_info = $this->item->get_cg_general_info($v);
+            $cg_result[$v]['CG'] = $cg_info['CG'];
+            $cg_result[$v]['CG_QTY'] = $cg_info['CG_QTY'];
+            
+            if (! empty(explode(',', $cg_info['CG']))) {
+                $this->assign_supplier($v, array_unique(explode(',', $cg_info['CG'])), $uid);
+            }
+        }
+        
+        $search_result = $this->doc->get_general_drawing_info($revision_status, $arr_dwg_no, $uid);
+        foreach ($search_result as $key => $value) {
+            $down_info = $this->sup_down->get_download_info($value['OBJECT_ID'], $value['CLASS_ID']);
+            $search_result[$key]['downdate'] = $down_info['DOWN_D'];
+            $search_result[$key]['downtime'] = $down_info['DOWN_T'];
+            
+            $search_result[$key]['CG'] = $cg_result[$value['TDM_ID']]['CG'];
+            $search_result[$key]['CG_QTY'] = $cg_result[$value['TDM_ID']]['CG_QTY'];
+            
+            if ($cg_result[$value['TDM_ID']]['CG_QTY'] == 1 && $search_result[$key]['CONT_SUP'] == 0) {
+                // save the SUP_CODE to table UD_WD_CG_SUP
+                
+                $cg_sup_info = $this->cg_sup->get_cg_sup_info($cg_result[$v]['CG']);
+                if (count($cg_sup_info) == 1) {
+                    
+                    $search_result[$key]['CONT_SUP'] = 1;
+                    $search_result[$key]['SUP_CODE'] = $cg_sup_info[0]['SUP_CODE'];
+                    $search_result[$key]['SUP_NAME'] = $cg_sup_info[0]['SUP_NAME'];
+                }
+            }
+        }
+        $response = create_response(TRUE, '', $search_result);
+        $this->response($response);
+    }
+
+    public function profile_card_get()
+    {
+        $TDM_ID = $this->get('TDM_ID');
+        $REVISION = $this->get('REVISION');
+        
+        $result = $this->doc->get_profile_card($TDM_ID, $REVISION);
+        
+        if ($result) {
+            $response = create_response(TRUE, '', $result);
+        } else {
+            $response = create_response(FALSE, 'no data founded', '');
+        }
+        $this->response($response);
+    }
+
+    /**
+     *
+     * @param string $dwg_no            
+     */
+    public function cg_list_get()
+    {
+        $dwg_no = $this->get('TDM_ID');
+        $cg_list = $this->dpc_cg->get_CG_list_info($dwg_no);
+        
+        if ($cg_list) {
+            $response = create_response(TRUE, '', $cg_list);
+        } else {
+            $response = create_response(FALSE, 'no data founded', '');
+        }
+        $this->response($response);
+    }
+
+    public function sup_name_get()
+    {
+        $sup_code = $this->get('sup_code');
+        $result = $this->vender->get_sup_names_by_code(array(
+            '0' => array(
+                'SUP_CODE' => $sup_code
+            )
+        ));
+        $response = create_response(TRUE, '', $result);
+        $this->response($response);
+    }
+
+    public function cg_count_get()
+    {
+        $sup_code = $this->get('sup_code');
+        $result = $this->cg_sup->get_cg_count_by_supcode(array(
+            $sup_code
+        ));
+        $response = create_response(TRUE, '', $result);
+        $this->response($response);
+    }
+
+    public function easy_assign_get()
+    {
+        $count = 0;
+        $sup_code = $this->get('sup_code');
+        $dwg_no_str = $this->get('dwg_no_str');
+        $uid = $this->get('uid');
+        $dwg_no_arr = explode(',', $dwg_no_str);
+        foreach ($dwg_no_arr as $key => $val) {
+            
+            $res = $this->dwg_sup->get('*', array(
+                'DWG_NO' => $val,
+                'SUP_CODE' => $sup_code
+            ));
+            if (! count($res)) {
+                $flag = $this->dwg_sup->save_dwg_sup($val, $sup_code, $uid);
+                if (flag)
+                    $count ++;
+            }
+        }
+        $response = create_response(TRUE, '', array(
+            "easy_count" => $count
+        ));
+        $this->response($response);
+    }
+
+    public function pdf_dwg_file_exists_get()
+    {
+        $tdm_id = $this->input->get('tdm_id');
+        $class_id = $this->doc->get_class_id($tdm_id);
+        
+        if (empty($class_id)) {
+            $response = create_response(TRUE, '', array(
+                'dwg' => "N",
+                'pdf' => "",
+                'pdf_file_name' => ''
+            ));
+        } elseif (count($class_id) > 1) {
+            $response = create_response(TRUE, '', array(
+                'dwg' => count($class_id),
+                'pdf' => count($class_id),
+                'pdf_file_name' => ''
+            ));
+        } else {
+            $file_info = $this->doc->get_info_for_job($class_id[0]['CLASS_ID'], $tdm_id);
+            if ($file_info && $file_info['SITE_NAME'] == 'KO') {
+                $exists = $this->file->pdf_dwg_file_exists($file_info['FILE_NAME'], $file_info['SITE_NAME']);
+                if ($exists) {
+                    $response = create_response(TRUE, '', $exists);
+                } else {
+                    $response = create_response(FALSE);
+                }
+            }
+        }
+        $this->response($response);
+    }
+
+    public function sup_cg_get()
+    {
+        $TDM_ID = $this->get('TDM_ID');
+        $cg_filter = $this->get('cg_filter');
+        $sup_cg_list = $this->cg_sup->get_SUP_CG_list_info($TDM_ID, $cg_filter);
+        if ($sup_cg_list) {
+            $response = create_response(TRUE, '', $sup_cg_list);
+        } else {
+            $response = create_response(FALSE, 'no data founded', '');
+        }
+        $this->response($response);
+    }
+
+    public function dwg_sup_get()
+    {
+        $TDM_ID = $this->get('TDM_ID');
+        $dwg_sup_list = $this->dwg_sup->get_DWG_SUP_list_info($TDM_ID);
+        if ($dwg_sup_list) {
+            $response = create_response(TRUE, '', $dwg_sup_list);
+        } else {
+            $response = create_response(FALSE, 'no data founded', '');
+        }
+        $this->response($response);
+    }
+
+    public function sup_mapping_delete()
+    {
+        $TDM_ID = $this->delete('TDM_ID');
+        $arrDel = $this->delete('arrDel');
+        $result = $this->dwg_sup->del_DWG_SUP_mapping($TDM_ID, $arrDel);
+        if ($result) {
+            $response = create_response(TRUE, 'delete successfully');
+        } else {
+            $response = create_response(FALSE, 'delete failed');
+        }
+        $this->response($response);
+    }
+
+    public function sup_mapping_post()
+    {
+        $TDM_ID = $this->post('TDM_ID');
+        $arrInsert = $this->post('arrInsert');
+        $CRT_USE = $this->post('CRT_USE');
+        if ($this->dwg_sup->insert_sup_mapping($TDM_ID, $arrInsert, $CRT_USE)) {
+            $response = create_response(TRUE, 'save successfully');
+        } else {
+            $response = create_response(FALSE, 'save failed');
+        }
+        $this->response($response);
+    }
+}

@@ -1,0 +1,153 @@
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class Download extends MY_Controller
+{
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * download a single file from API
+     */
+    public function download_file()
+    {
+        $file_name = $this->uri->segment(3);
+        $site = $this->uri->segment(4);
+        $version = $this->uri->segment(5);
+        //http://10.126.96.58/download/download_file/D300041320_805519444_365.dwg/KO/ac/805518783/365/D300041320
+        //http://10.126.96.58/download/download_file/D300041320_805519444_365.pdf/KO/ac/805518783/365/D300041320
+        $para = array(
+            "OBJECT_ID" => $this->uri->segment(6),
+            "CLASS_ID" => $this->uri->segment(7),
+            "TDM_ID" => $this->uri->segment(8),
+            "REVISION" => $version,
+            "USER_TYPE" => $this->session->user_type_brief,
+            "USER_ID" => $this->session->user_login,
+            "SUP_CODE" => $this->session->uid,
+            "USER_NAME" => $this->session->user_display_name,
+            "DOWN_D" => date('Ymd'),
+            "DOWN_T" => date('His')
+        );
+
+        //var_dump($para);exit;
+        /*
+         * array(10) {
+          ["OBJECT_ID"]=>
+          string(9) "805518783"
+          ["CLASS_ID"]=>
+          string(3) "365"
+          ["TDM_ID"]=>
+          string(10) "D300041320"
+          ["REVISION"]=>
+          string(2) "ac"
+          ["USER_TYPE"]=>
+          string(1) "I"
+          ["USER_ID"]=>
+          string(8) "10445383"
+          ["SUP_CODE"]=>
+          string(8) "10445383"
+          ["USER_NAME"]=>
+          string(9) "남정현"
+          ["DOWN_D"]=>
+          string(8) "20171214"
+          ["DOWN_T"]=>
+          string(6) "090506"
+        }
+         */
+
+        if ($file_name && $site && $version) {
+
+            /*var_dump(array(
+                'file_name' => $file_name,
+                'site' => $site,
+                'para' => $para
+            ));exit;*/
+            /*
+             array(3) {
+              ["file_name"]=>
+              string(28) "D300041320_805519444_365.dwg"
+              ["site"]=>
+              string(2) "KO"
+              ["para"]=>
+              array(10) {
+                ["OBJECT_ID"]=>
+                string(9) "805518783"
+                ["CLASS_ID"]=>
+                string(3) "365"
+                ["TDM_ID"]=>
+                string(10) "D300041320"
+                ["REVISION"]=>
+                string(2) "ac"
+                ["USER_TYPE"]=>
+                string(1) "I"
+                ["USER_ID"]=>
+                string(8) "10445383"
+                ["SUP_CODE"]=>
+                string(8) "10445383"
+                ["USER_NAME"]=>
+                string(9) "남정현"
+                ["DOWN_D"]=>
+                string(8) "20171214"
+                ["DOWN_T"]=>
+                string(6) "093723"
+              }
+            }
+             */
+            $result = $this->rest->get('files', array(
+                'file_name' => $file_name,
+                'site' => $site,
+                'para' => $para
+            ), 'serialized');
+            //var_dump($result);exit;
+            if ($result['status'] === TRUE) {
+                $file_name = get_destination_name($file_name, $version);
+                //var_dump($file_name);exit;
+                download($file_name, $result['data']['size'], $result['data']['content']);
+            } else {
+                return FALSE;
+            }
+        } else {
+            return FALSE;
+        }
+    }
+
+    /**
+     * download multi-files as a zip file from API
+     */
+    public function download_zip()
+    {
+        $data = $this->input->post();
+        if (! empty($data['file_name'])) {
+            foreach ($data['file_name'] as $key => $val) {
+                $file[$key]['file_name'] = $data['need_check_file'][$val];
+                $file[$key]['site'] = $data['site'][$val];
+                $file[$key]['version'] = $data['version'][$val];
+                $para[$key]['OBJECT_ID'] = $data['object_id'][$val];
+                $para[$key]['CLASS_ID'] = $data['class_id'][$val];
+                $para[$key]['TDM_ID'] = $data['tdm_id'][$val];
+                $para[$key]['REVISION'] = $data['version'][$val];
+                $para[$key]['USER_TYPE'] = $this->session->user_type_brief;
+                $para[$key]['USER_ID'] = $this->session->user_login;
+                $para[$key]['SUP_CODE'] = $this->session->uid;
+                $para[$key]['USER_NAME'] = $this->session->user_display_name;
+                $para[$key]['DOWN_D'] = date('Ymd');
+                $para[$key]['DOWN_T'] = date('His');
+            }
+            $result = $this->rest->get('files/zip', array(
+                'file' => $file,
+                'para' => $para
+            ), 'serialized');
+            
+            if ($result['status'] === TRUE) {
+                download($result['data']['file_name'], $result['data']['size'], $result['data']['content']);
+            } else {
+                return FALSE;
+            }
+        } else {
+            return FALSE;
+        }
+    }
+}

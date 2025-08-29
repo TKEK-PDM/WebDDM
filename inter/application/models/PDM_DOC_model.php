@@ -1,0 +1,365 @@
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class PDM_DOC_Model extends MY_Model
+{
+
+    protected $table = 'PDM_DOC';
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * get data
+     *
+     * @param array $where            
+     * @param int $limit            
+     * @param int $offset            
+     * @param string $order_by            
+     * @return array()
+     */
+    public function get($select = "*", $where = array(), $limit = NULL, $offset = NULL, $order_by = NULL)
+    {
+        $this->db->select($select)
+            ->where($where)
+            ->order_by($order_by)
+            ->limit($limit, $offset);
+        return $this->db->get($this->table)->result_array();
+    }
+
+    /**
+     * get class site info
+     *
+     * @param string $dwg_no            
+     */
+    public function get_class_site($dwg_no)
+    {
+        return $this->db->query('SELECT DISTINCT CLASS_ID, (SELECT TDM_PREFIX FROM PDM_DB_SITE WHERE OBJECT_ID = A.TDM_SITE_ID) AS SITE_NAME FROM PDM_DOC A WHERE TDM_ID = ?', array(
+            $dwg_no
+        ))->row_array();
+    }
+
+    public function get_info_for_job($class_id, $dwg_no)
+    {
+        $sql = "SELECT TDM_SITE_ID,
+                  (SELECT TDM_PREFIX FROM PDM_DB_SITE WHERE OBJECT_ID = A.TDM_SITE_ID
+                  ) AS SITE_NAME,
+                  (SELECT CLASS_NAME FROM PDM_TDM_CLASS WHERE CLASS_ID = A.CLASS_ID
+                  ) AS CLASS_NAME,
+                  CLASS_ID,
+                  OBJECT_ID,
+                  TDM_ID,
+                  REPLACE(A.REVISION, ' ', '00') AS REVISION,
+                  TDM_DESCRIPTION,
+                  CN_LOCAL_DESCRIPTION,
+                  (SELECT TDM_NAME FROM PDM_FILE_TYPE WHERE OBJECT_ID = A.FILE_TYPE
+                  ) AS FILE_TYPE_NAME,
+                  FILE_NAME
+                FROM
+                  (SELECT CLASS_ID,
+                    OBJECT_ID,
+                    STATE,
+                    TDM_ID,
+                    REVISION,
+                    TDM_DESCRIPTION,
+                    CN_LOCAL_DESCRIPTION,
+                    FILE_TYPE,
+                    FILE_NAME,
+                    TDM_SITE_ID
+                  FROM PDM_DOC
+                  WHERE CLASS_ID = ?
+                  AND TDM_ID     = ?
+                  AND STATE      = '3'
+                  ORDER BY OBJECT_ID DESC
+                  ) A
+                WHERE ROWNUM = 1
+                    ";
+        return $this->db->query($sql, array(
+            $class_id,
+            $dwg_no
+        ))->row_array();
+    }
+
+    /**
+     *
+     * get information
+     *
+     * @param unknown $class_id            
+     * @param unknown $dwg_no            
+     * @param unknown $sup_code            
+     */
+    public function get_info($class_id, $dwg_no)
+    {
+        return $this->db->order_by('OBJECT_ID DESC')
+            ->get_where($this->table, array(
+            'CLASS_ID' => $class_id,
+            'TDM_ID' => $dwg_no
+        ))
+            ->row_array();
+    }
+
+    /**
+     * get all latest drawing info
+     */
+    public function get_latest_info($uid, $user_login)
+    {
+        $sql = "SELECT DISTINCT
+                    (SELECT TDM_PREFIX FROM PDM_DB_SITE WHERE OBJECT_ID = A.TDM_SITE_ID) AS SITE_NAME,
+                    (SELECT CLASS_NAME FROM PDM_TDM_CLASS WHERE CLASS_ID = A.CLASS_ID) AS CLASS_NAME,
+                    A.CLASS_ID, A.OBJECT_ID, A.TDM_ID, REPLACE(A.REVISION, ' ', '00') AS REVISION,
+                    C.REVISION AS MY_REVISION,
+                    A.TDM_DESCRIPTION, A.CN_LOCAL_DESCRIPTION,
+                    (SELECT TDM_NAME FROM PDM_FILE_TYPE WHERE OBJECT_ID = A.FILE_TYPE) AS FILE_TYPE_NAME, A.FILE_NAME,
+
+
+                    (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_OBJECT_ID) AS CRT_USER,
+                    TO_CHAR(CREATION_DATE, 'YYYYMMDD') AS CRT_DATE,
+                    TO_CHAR(CREATION_DATE, 'HH24MISS') AS CRT_TIME,
+                    (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_ID_MOD) AS MOD_USER,
+                    TO_CHAR(MODIFICATION_DATE, 'YYYYMMDD') AS MOD_DATE,
+                    TO_CHAR(MODIFICATION_DATE, 'HH24MISS') AS MOD_TIME
+
+                    FROM PDM_DOC A, UD_WD_DWG_DIST_SUP B ,
+                                (SELECT MAX(REVISION) REVISION,CLASS_ID ,TDM_ID,USER_ID FROM UD_WD_SUP_DOWN
+                                   WHERE USER_ID=? group by CLASS_ID ,TDM_ID,USER_ID ) C
+
+                    WHERE A.OBJECT_ID = B.OBJECT_ID AND B.SUP_CODE = ? AND B.HIDDEN = 'N' AND
+                    A.CLASS_ID = C.CLASS_ID(+) AND
+                    A.TDM_ID = C.TDM_ID(+)
+
+                    ORDER BY TDM_ID, REVISION";
+        return $this->db->query($sql, array(
+            $user_login,
+            $uid
+        ))->result_array();
+    }
+
+    /**
+     *
+     * get class id group by class id
+     *
+     * @param unknown $tmd_id            
+     * @return array
+     */
+    public function get_class_id($tmd_id)
+    {
+        return $this->db->select('CLASS_ID')
+            ->group_by('CLASS_ID')
+            ->get_where($this->table, array(
+            'TDM_ID' => $tmd_id
+        ))
+            ->result_array();
+    }
+
+    /**
+     *
+     * get supplier download info
+     *
+     * @param unknown $dwg_no            
+     * @param unknown $class_id            
+     */
+    public function get_sup_down($dwg_no, $class_id)
+    {
+        $sql = "SELECT ";
+        $sql .= " TDM_SITE_ID, (SELECT TDM_PREFIX FROM PDM_DB_SITE WHERE OBJECT_ID = A.TDM_SITE_ID) AS SITE_NAME,";
+        $sql .= " (SELECT CLASS_NAME FROM PDM_TDM_CLASS WHERE CLASS_ID = A.CLASS_ID) AS CLASS_NAME,";
+        $sql .= " CLASS_ID, OBJECT_ID, TDM_ID, REPLACE(A.REVISION, ' ', '00') AS REVISION, TDM_DESCRIPTION, CN_LOCAL_DESCRIPTION,";
+        $sql .= "(SELECT TDM_NAME FROM PDM_FILE_TYPE WHERE OBJECT_ID = A.FILE_TYPE) AS FILE_TYPE_NAME,";
+        $sql .= " FILE_NAME,";
+        
+        $sql .= " (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_OBJECT_ID) AS CRT_USER,";
+        $sql .= " TO_CHAR(CREATION_DATE, 'YYYYMMDD') AS CRT_DATE,";
+        $sql .= " TO_CHAR(CREATION_DATE, 'HH24MISS') AS CRT_TIME,";
+        
+        $sql .= " (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_ID_MOD) AS MOD_USER,";
+        $sql .= " TO_CHAR(MODIFICATION_DATE, 'YYYYMMDD') AS MOD_DATE,";
+        $sql .= " TO_CHAR(MODIFICATION_DATE, 'HH24MISS') AS MOD_TIME";
+        
+        $sql .= " FROM PDM_DOC A";
+        
+        $sql .= " WHERE TDM_ID = ? AND CLASS_ID = ? AND STATE = '3'";
+        $sql .= " ORDER BY OBJECT_ID";
+        
+        return $this->db->query($sql, array(
+            $dwg_no,
+            $class_id
+        ))->result_array();
+    }
+
+    function get_search_info($data, $per_page, $offset)
+    {
+        // $offset_new = $offset == 0 ? 1 : $offset;
+        // $begin = $offset * $per_page + 1;
+        // $final = ($offset + 1) * $per_page;
+        $sql = "SELECT TDM_SITE_ID,
+                    (SELECT TDM_PREFIX FROM PDM_DB_SITE WHERE OBJECT_ID = A.TDM_SITE_ID
+                    ) AS SITE_NAME,
+                    (SELECT CLASS_NAME FROM PDM_TDM_CLASS WHERE CLASS_ID = A.CLASS_ID
+                    ) AS CLASS_NAME,
+                    STATE,
+                    (SELECT TDM_NAME FROM PDM_STATE WHERE OBJECT_ID = A.STATE
+                    ) AS STATE_NAME,
+                    CLASS_ID,
+                    OBJECT_ID,
+                    TDM_ID,
+                    REPLACE(A.REVISION, ' ', '00') AS REVISION,
+                    TDM_DESCRIPTION,
+                    CN_LOCAL_DESCRIPTION,
+                    (SELECT TDM_NAME FROM PDM_FILE_TYPE WHERE OBJECT_ID = A.FILE_TYPE
+                    ) AS FILE_TYPE_NAME,
+                    FILE_NAME,
+                    (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_OBJECT_ID
+                    )                                  AS CRT_USER,
+                    TO_CHAR(CREATION_DATE, 'YYYYMMDD') AS CRT_DATE,
+                    TO_CHAR(CREATION_DATE, 'HH24MISS') AS CRT_TIME,
+                    (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_ID_MOD
+                    )                                      AS MOD_USER,
+                    TO_CHAR(MODIFICATION_DATE, 'YYYYMMDD') AS MOD_DATE,
+                    TO_CHAR(MODIFICATION_DATE, 'HH24MISS') AS MOD_TIME
+                  FROM PDM_DOC A
+                  WHERE OBJECT_ID IN
+                    (SELECT OBJECT_ID2 FROM PDM_DOC_TREE WHERE OBJECT_ID1 = " . $data . "
+                    )
+                    ORDER BY TDM_ID";
+        // if ($per_page != '' && $offset != '') {
+        // $sql_final = $sql . " AND rownum <= " . $final . " minus " . $sql . " AND rownum < " . $begin;
+        // } else {
+        // $sql_final = $sql;
+        // }
+        // echo $sql_final;exit;
+        return $this->db->query($sql)->result_array();
+    }
+
+    function get_useremail_info($dwg_no,$first_char){
+
+        if($first_char == 'M'){
+            $sub_sql = "(SELECT D_MANA FROM PDM_DJOBLM WHERE JOB1_CODE ='$dwg_no')";
+        }
+        else if($first_char =='E'){
+            $sub_sql = "(SELECT D_MANA FROM PDM_DJOBLE_AA WHERE JOB1_CODE ='$dwg_no')";
+        }
+
+        $sql = "SELECT USER_EMAIL FROM PDM_USERS WHERE TDM_DESCRIPTION =$sub_sql ";
+        $return = $this->db->query($sql)->result_array();
+
+        if(count($return) > 1){
+            return null;
+        }else{
+            return $return;
+        }
+
+    }
+
+    function get_general_drawing_info($revision_status, $arr_dwg_no, $uid)
+    {
+        $like = "";
+        $where = "";
+        foreach ($arr_dwg_no as $dwg_no) {
+            if (empty($like)) {
+                $like .= "UPPER(TDM_ID) LIKE '" . $dwg_no . "%'";
+            } else {
+                $like .= " or UPPER(TDM_ID) LIKE '" . $dwg_no . "%'";
+            }
+        }
+        if ($revision_status == 'latest') {
+            $sub_sql = "(SELECT MAX(object_id) obj_id,TDM_ID,CLASS_ID from PDM_DOC WHERE $like GROUP BY TDM_ID,CLASS_ID) B,";
+        } else {
+            $sub_sql = "(SELECT DISTINCT TDM_ID,CLASS_ID from PDM_DOC WHERE $like ) B,";
+        }
+        
+        $sql = "SELECT TDM_SITE_ID,
+                  (SELECT TDM_PREFIX FROM PDM_DB_SITE WHERE OBJECT_ID = A.TDM_SITE_ID
+                  ) AS SITE_NAME,
+                  (SELECT CLASS_NAME FROM PDM_TDM_CLASS WHERE CLASS_ID = A.CLASS_ID
+                  ) AS CLASS_NAME,
+                  CLASS_ID,
+                  OBJECT_ID,
+                  TDM_ID,
+                  REPLACE(A.REVISION, ' ', '00') AS REVISION,
+                  TDM_DESCRIPTION,
+                  CN_LOCAL_DESCRIPTION,
+                  (SELECT TDM_NAME FROM PDM_FILE_TYPE WHERE OBJECT_ID = A.FILE_TYPE
+                  ) AS FILE_TYPE_NAME,
+                  FILE_NAME,
+                  (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_OBJECT_ID
+                  )                                  AS CRT_USER,
+                  TO_CHAR(CREATION_DATE, 'YYYYMMDD') AS CRT_DATE,
+                  TO_CHAR(CREATION_DATE, 'HH24MISS') AS CRT_TIME,
+                  (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_ID_MOD
+                  )                                      AS MOD_USER,
+                  TO_CHAR(MODIFICATION_DATE, 'YYYYMMDD') AS MOD_DATE,
+                  TO_CHAR(MODIFICATION_DATE, 'HH24MISS') AS MOD_TIME,
+                  (SELECT COUNT(*) AS CNT FROM UD_WD_DWG_SUP E WHERE E.DWG_NO = A.TDM_ID AND E.SUP_CODE = ?) AS CONT1,
+                  (SELECT COUNT(*) AS CNT FROM UD_WD_SUP_DOWN F WHERE F.OBJECT_ID = A.OBJECT_ID AND F.CLASS_ID = A.CLASS_ID AND F.SUP_CODE = ?) AS COUNT2,
+                  (SELECT COUNT(*) AS CNT FROM UD_WD_DWG_SUP G WHERE G.DWG_NO = A.TDM_ID AND SUBSTR(SUP_CODE,1,1) = '5') AS CONT_SUP,
+                  SUP_CODE,
+                 (SELECT SUP_NAME FROM TIS_MVENDOR G WHERE G.sup_code = A.sup_code) AS SUP_NAME
+                FROM (
+                SELECT  a.*,c.SUP_CODE
+                  FROM PDM_DOC A ,$sub_sql
+                  ( select DWG_NO,min(SUP_CODE)  SUP_CODE from ud_wd_dwg_sup WHERE SUBSTR(SUP_CODE,1,1) = '5' group by DWG_NO) C
+                  WHERE a.TDM_ID = b.TDM_ID
+                  and a.TDM_ID = c.DWG_NO(+)
+                  AND a.CLASS_ID = b.CLASS_ID
+                  ";
+        if ($revision_status == 'latest') {
+            $where = " and A.object_id = B.obj_id";
+        }
+        $sql_last = " AND STATE    = '3'
+                      ORDER BY OBJECT_ID DESC
+                      ) A";
+        $search_sql = $sql . $where . $sql_last;
+        
+        $data[] = $uid;
+        $data[] = $uid;
+        
+        // return $final_sql;
+        return $this->db->query($search_sql, $data)->result_array();
+    }
+
+    /* get profile card data */
+    public function get_profile_card($TDM_ID, $REVISION)
+    {
+        $sql = "SELECT
+                   (SELECT TDM_PREFIX FROM PDM_DB_SITE WHERE OBJECT_ID = A.TDM_SITE_ID) AS SITE_NAME,
+                   (SELECT CLASS_NAME FROM PDM_TDM_CLASS WHERE CLASS_ID = A.CLASS_ID) AS CLASS_NAME,
+                   (SELECT TDM_NAME FROM PDM_STATE WHERE OBJECT_ID = A.STATE) AS STATE_NAME,
+                   OBJECT_ID,
+                   TDM_ID,
+                   REVISION,
+                   TDM_DESCRIPTION,
+                   CN_LOCAL_DESCRIPTION,
+                   (SELECT TDM_NAME FROM PDM_FILE_TYPE WHERE OBJECT_ID = A.FILE_TYPE) AS FILE_TYPE_NAME,
+                   CAD_REF_FILE_NAME,
+                   FILE_NAME,
+                   (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_OBJECT_ID) AS CRT_USER,
+                   TO_CHAR(CREATION_DATE, 'YYYY-MM-DD') AS CRT_DATE,
+                   TO_CHAR(CREATION_DATE, 'HH24:MI:SS') AS CRT_TIME,
+                   (SELECT TDM_DESCRIPTION FROM PDM_USERS WHERE OBJECT_ID = A.USER_ID_MOD) AS MOD_USER,
+                   TO_CHAR(MODIFICATION_DATE, 'YYYY-MM-DD') AS MOD_DATE,
+                   TO_CHAR(MODIFICATION_DATE, 'HH24:MI:SS') AS MOD_TIME
+
+              FROM PDM_DOC A
+             WHERE TDM_ID = ?
+               AND REVISION = ?
+                ";
+        return $this->db->query($sql, array(
+            $TDM_ID,
+            $REVISION == "00" ? ' ' : $REVISION
+        ))->result_array();
+    }
+
+    /*
+     * get single file info
+     *
+     */
+    public function get_single_file_info($TDM_ID, $REVISION)
+    {
+        return $this->db->get_where($this->table, array(
+            'TDM_ID' => $TDM_ID,
+            'REVISION' => $REVISION == "00" ? ' ' : $REVISION
+        ))->row_array();
+    }
+}

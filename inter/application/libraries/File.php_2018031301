@@ -1,0 +1,214 @@
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class File
+{
+
+    const KO_PATH = 'Work_SharedDir/released/KO/';
+
+    const SJ_PATH = 'Mirror_SharedDir/Released/SJ/';
+
+    const ZS_PATH = 'Mirror_SharedDir/Released/ZS/';
+
+    const KO_PDF_PATH = 'Pdf_Dir/released/KO/';
+
+    const DOWNLOAD_PATH = 'download/';
+
+    private $_CI;
+
+    public function __construct()
+    {
+        $this->_CI = &get_instance();
+        $this->_CI->load->library('ftp');
+    }
+
+    /**
+     * check if the file is exists on the ftp server
+     *
+     * @param unknown $file_name            
+     * @param unknown $site            
+     */
+    public function file_exists($file_name, $site)
+    {
+        $conn = $this->_CI->ftp->connect();
+        $file = $this->get_file_path($file_name, $site);
+        if (strtolower(trim(strrchr($file_name, '.'), '.')) == 'pdf' && $site == "KO") {
+            $file = $this->get_file_path($file_name, $site,'pdf');
+        } else {
+            $file = $this->get_file_path($file_name, $site);
+        }
+        $res = $this->_CI->ftp->ftp_get_fize($file);
+        $this->_CI->ftp->close();
+        return $res ? TRUE : $res;
+    }
+
+    /**
+     * check the pdf and dwg file on the ftp server
+     *
+     * @param unknown $file_name            
+     * @param unknown $site            
+     */
+    public function pdf_dwg_file_exists($file_name, $site)
+    {
+        $conn = $this->_CI->ftp->connect();
+        $file_dwg = $this->get_file_path($file_name, $site);
+        $res['dwg'] = $this->_CI->ftp->ftp_get_fize($file_dwg) ? 'Y' : 'N';
+        if (strtolower(trim(strrchr($file_name, '.'), '.')) == 'dwg' && $site == "KO") {
+            $pdf_file_name = substr($file_name, 0, strlen($file_name) - 3) . 'pdf';
+            // $file_pdf = $this->get_file_path($pdf_file_name, $site);
+            $file_pdf = $this->get_file_path($pdf_file_name, $site,'pdf');
+            $res['pdf'] = $this->_CI->ftp->ftp_get_fize($file_pdf) ? 'Y' : 'N';
+            $res['pdf_file_name'] = $pdf_file_name;
+        } else {
+            $res['pdf'] = '';
+            $res['pdf_file_name'] = '';
+        }
+        $this->_CI->ftp->close();
+        return $res;
+    }
+
+    /**
+     * get the file path on ftp server
+     *
+     * @param unknown $file_name            
+     * @param unknown $site            
+     * @return string
+     */
+    public function get_file_path($file_name, $site, $type = NULL)
+    {
+        $file_name = mb_convert_encoding(urldecode($file_name), 'EUC_KR', 'UTF-8');
+        switch ($site) {
+            case 'KO':
+                $file = strtolower($type) == 'pdf' ? self::KO_PDF_PATH . $file_name : self::KO_PATH . $file_name;
+                break;
+            case 'SJ':
+                $file = self::SJ_PATH . $file_name;
+                break;
+            case 'ZS':
+                $file = self::ZS_PATH . $file_name;
+        }
+        return $file;
+    }
+
+    /**
+     * download single file from ftp server
+     *
+     * @param unknown $file_name            
+     * @param unknown $site            
+     * @return boolean|unknown
+     */
+    public function download_file($file_name, $site)
+    {
+        $this->_CI->ftp->connect();
+        if (strtolower(trim(strrchr($file_name, '.'), '.')) == 'pdf') {
+            $file = $this->get_file_path($file_name, $site,'pdf');
+        } else {
+            $file = $this->get_file_path($file_name, $site);
+        }
+        $size = $this->_CI->ftp->ftp_get_fize($file);
+        
+        if ($size) {
+            $content = $this->_CI->ftp->ftp_get_contents($file);
+            $this->_CI->ftp->close();
+            if ($content) {
+                $response['content'] = $content;
+                $response['size'] = $size;
+            } else {
+                return FALSE;
+            }
+        } else {
+            return FALSE;
+        }
+        
+        return $response;
+    }
+
+    /**
+     * download mulit-files , compressed files as a zip file
+     *
+     * @param array $file
+     *            array(array('file_name'=>'filename','site'=>'site','version'=>'version'))
+     * @param unknown $zip_name            
+     * @return boolean|string|unknown
+     */
+    public function download_zip(array $file, $zip_name = NULL)
+    {
+        $zip = new ZipArchive();
+        $zip_name = $zip_name ? $zip_name : "Download_" . date('Ymd') . "_" . date('His') . ".zip";
+        $uuid = create_uuid();
+        $local_path = FCPATH . self::DOWNLOAD_PATH . $uuid . '/';
+        mkdir($local_path);
+        
+        $this->_CI->ftp->connect();
+        foreach ($file as $key => $val) {
+            $local_file_name = $this->_get_destination_name($val['file_name'], $val['version']);
+            $local_file = $local_path . $local_file_name;
+            $rem_file = $this->get_file_path($val['file_name'], $val['site']);
+            $download = $this->_CI->ftp->download($rem_file, $local_file);
+            if (! $download) {
+                $error[] = $val['file_name'];
+            } else {
+                $zip_file = $local_path . $zip_name;
+                if ($zip->open($zip_file, ZipArchive::CREATE) === TRUE) {
+                    $zip->addFile($local_file, $local_file_name);
+                }
+            }
+        }
+        $zip->close();
+        $this->_CI->ftp->close();
+        if (file_exists($zip_file)) {
+            $response['content'] = file_get_contents($zip_file);
+            $response['size'] = filesize($zip_file);
+            $response['file_name'] = $zip_name;
+        } else {
+            return FALSE;
+        }
+        $this->delete_dir($local_path);
+        return $response;
+    }
+
+    /**
+     * Extract the file extension
+     *
+     * @param string $filename            
+     * @return string
+     */
+    protected function _getext($filename)
+    {
+        return (($dot = strrpos($filename, '.')) === FALSE) ? FALSE : substr($filename, $dot + 1);
+    }
+
+    /**
+     * get file destination name
+     *
+     * @param unknown $file_name            
+     * @param unknown $version            
+     */
+    protected function _get_destination_name($file_name, $version)
+    {
+        $ext = $this->_getext($file_name);
+        return substr($file_name, 0, strpos($file_name, '_', strrpos($file_name, ')') ? strrpos($file_name, ')') : 0)) . '_' . $version . '.' . $ext;
+    }
+
+    /**
+     * delete the directory includes all the files int the dir
+     *
+     * @param unknown $src            
+     */
+    protected function delete_dir($src)
+    {
+        $dir = opendir($src);
+        while (false !== ($file = readdir($dir))) {
+            if (($file != '.') && ($file != '..')) {
+                $full = $src . '/' . $file;
+                if (is_dir($full)) {
+                    delte_dir($full);
+                } else {
+                    @unlink($full);
+                }
+            }
+        }
+        closedir($dir);
+        @rmdir($src);
+    }
+}

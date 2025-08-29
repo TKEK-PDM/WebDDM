@@ -1,0 +1,127 @@
+<?php
+defined('BASEPATH') or exit();
+
+class General_draw extends MY_Controller
+{
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    public function index()
+    {
+        $this->session->set_userdata('menu_url', base_url('general_draw/index'));
+        $search_count = 0;
+        $item_count = 0;
+        $request_dwg_arr = array();
+        $result_dwg_arr = array();
+        $no_exist_dwg_arr = array();
+
+        if ($_POST) {
+            $revision_status = $this->input->post('revision_status');
+            $dwg_no = $this->input->post('dwg_no');
+            $uid = $this->session->uid;
+            $dwg_no_arr = explode("\n", trim($dwg_no));
+            foreach ($dwg_no_arr as $k => $v) {
+                if (isset($v) && !empty($v)) {
+                    $request_dwg_arr[] = trim($v);
+                }
+            }
+            foreach ($request_dwg_arr as $key => $val) {
+                $arr_dwg_no[] = trim($val);
+            }
+
+            $response = $this->rest->get('Drawings/general_drawing', array(
+                'dwg_no' => $arr_dwg_no,
+                'revision_status' => $revision_status,
+                'uid' => $uid
+            ));
+
+            if ($response->status === true) {
+                $result = $response->data;
+                $search_count = 1;
+                $keep = true;
+            }
+            $request_dwg_str = $dwg_no;
+        }
+
+        foreach ($result as $key => $val) {
+            $result_dwg_arr[] = $val->TDM_ID;
+            $item_count++;
+        }
+
+        $no_exist_dwg_arr = array_diff($request_dwg_arr, $result_dwg_arr);
+        $no_exist_dwg_str = implode('<br>', $no_exist_dwg_arr);
+        $email_dwg_email = implode('%0A', $no_exist_dwg_arr);
+
+        // load comment sup mapping page
+        $assign_supplier_page = $this->load->view('assign_supplier', "", true);
+
+        $this->layout->view('general_draw/index', array(
+            'data' => $result,
+            'search_count' => $search_count,
+            'item_count' => $item_count,
+            'email_dwg' => $no_exist_dwg_str,
+            'email_dwg_email' => $email_dwg_email,
+            'assign_supplier_page' => $assign_supplier_page,
+            'request_dwg_str' => $request_dwg_str,
+            'keep' => $keep
+        ));
+    }
+
+    public function cg_list()
+    {
+        $this->session->set_userdata('menu_url', base_url('general_draw/index'));
+        $TDM_ID = $this->input->get_post('TDM_ID');
+
+        $response = $this->rest->get('Drawings/cg_list', array(
+            'TDM_ID' => $TDM_ID
+        ));
+        if ($response->status === true) {
+            $result = $response->data;
+        }
+        echo $this->load->view('general_draw/cg_list', array(
+            'data' => $result
+        ), true);
+        exit();
+    }
+
+    public function get_sup_name()
+    {
+        $sup_code = $this->input->post('sup_code');
+        $sup_response = $this->rest->get("Drawings/sup_name", array(
+            'sup_code' => $sup_code
+        ));
+
+        $cg_response = $this->rest->get("Drawings/cg_count", array(
+            'sup_code' => $sup_code
+        ));
+
+        if ($sup_response->status === true) {
+            $sup_name = $sup_response->data;
+        }
+        if ($cg_response->status === true) {
+            $cg_count = $cg_response->data;
+        }
+        echo $sup_name . "," . $cg_count;
+        exit();
+    }
+
+    public function easy_assign()
+    {
+        $sup_code = $this->input->post('sup_code');
+        $dwg_no_str = $this->input->post('dwg_no_str');
+        $uid = $this->session->uid;
+        $response = $this->rest->get("Drawings/easy_assign", array(
+            'dwg_no_str' => $dwg_no_str,
+            'sup_code' => $sup_code,
+            'uid' => $uid
+        ));
+        if ($response->status === true) {
+            $result = $response->data;
+        }
+        echo $result->easy_count;
+        exit();
+    }
+}

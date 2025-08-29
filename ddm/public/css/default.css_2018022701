@@ -1,0 +1,781 @@
+element.style {
+    min-width: 1100px;
+}
+*::before, *::after {
+    box-sizing: border-box;
+}
+*::before, *::after {
+    box-sizing: border-box;
+}
+.headerdiv {
+    background: rgba(0, 0, 0, 0) url("../../Content/image/top.png") no-repeat scroll 0 0 / 100% 190px;
+    height: 190px;
+}
+* {
+    /*cg_mapping_add:*/
+    box-sizing: border-box;
+}
+body {
+    color: #333;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857;
+	background-color:#eef0f2 
+}
+* {
+    font-size: 9pt;
+    text-decoration: none;
+}
+html {
+    font-size: 10px;
+}
+td:not(.wrapTd){
+	white-space: nowrap;
+}
+table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+    padding-right: 8px;
+}
+#navbar .mainnavi > li > a {
+    border: 0 none;
+    color: #00a0f0;
+    display: block;
+    padding: 0;
+    text-decoration: none;
+}
+
+.page-header {
+    margin: 15px 0;
+}
+#navbar li a {
+    background-color: transparent;
+    color: #00a0f0;
+    cursor: pointer;
+    display: block;
+    font-size: 1.5em;
+    font-weight: normal;
+    line-height: 2.063em;
+    padding: 0;
+    text-decoration: none;
+    text-transform: none;
+}
+a:active, a:focus, a, div, * {
+    outline: medium none !important;
+    text-decoration: none;
+}
+a {
+    color: #00a0f0;
+    cursor: pointer;
+}
+a:active, a:focus, a, div, * ,a:hover{
+    outline: medium none !important;
+    text-decoration: none;
+}
+*::-moz-selection {
+    background: #7cb2de none repeat scroll 0 0;
+    color: #ffffff;
+    text-shadow: none;
+}
+#navbar .mainnavi, #navbar .mainnavit, #navbar .mainnavim {
+    list-style-type: none;
+}
+#side-menu a{
+	/*color:#fff;*/
+	font-size:16px;
+}
+.nav > li > label {
+    display: block;
+    padding: 10px 15px;
+    position: relative;
+}
+
+#supplier-menu label{
+	/*color:#fff;*/
+	font-size:16px;
+	color: #00a0f5;
+	font-weight: normal;
+}
+#supplier-menu a {
+    font-size: 16px;
+}
+.sidebar .active>label>.fa.arrow:before {
+    content: "\f107";
+}
+html, body {
+font-family:tktype;
+font-size:16px;
+}
+@font-face {
+    font-family: tktype;
+    src: url("../fonts/tktyperegular-eot.eot?#iefix") format("eot"), url("../fonts/tktyperegular-woff.woff") format("woff"), url("../fonts/tktyperegular-ttf.ttf") format("truetype"), url("../fonts/tktyperegular-svg.svg") format("svg");
+}
+
+.dashboardIcon{width:80px;height:80px;}
+.dropdown-menu > li > a{
+	color:#003c7d;
+}
+li.dropdown a{
+	color:#003c7d;
+}
+.panel-blue {
+    border-color: #0078dc;
+}
+.panel-blue > .panel-heading {
+    background-color: #0078dc;
+    border-color: #0078dc;
+    color: #fff;
+}
+.panel-blue > .panel-heading + .panel-collapse > .panel-body {
+    border-top-color: #0078dc;
+}
+.panel-blue > .panel-heading .badge {
+    background-color: #fff;
+    color: #0078dc;
+}
+.panel-blue > .panel-footer + .panel-collapse > .panel-body {
+    border-bottom-color: #0078dc;
+}
+.panel-blue a {
+    color: #0078dc;
+}
+#footer{
+	height:50px;color: #72849a; padding:19px 40px 8px;   font-size: 1em; border-color: #e7e7e7;  line-height: 1.14286em;border: 1px solid 	#e7e7e7;
+}
+.align_middle{
+	text-align:center;
+}
+th{
+	text-align:center;
+	white-space: nowrap;
+}
+.blueBackgroud{
+	background-color:#00a0f0;
+	border-color:#00a0f0
+}
+.blueBackgroud:hover,.blueBackgroud.active, .blueBackgroud:active{
+	background-color:#1f7fb6;
+	border-color:#1f7fb6
+}
+.blueBackgroud.active.focus, .blueBackgroud.active:focus, .blueBackgroud.active:hover, .blueBackgroud.focus:active, .blueBackgroud:active:focus, .blueBackgroud:active:hover, .open > .dropdown-toggle.blueBackgroud.focus, .open > .dropdown-toggle.blueBackgroud:focus, .open > .dropdown-toggle.blueBackgroud:hover {
+    background-color: #1f7fb6;
+    border-color: #1f7fb6;
+    color: #fff;
+}
+#userForm table{
+	width:100%;
+}
+#userForm table tr{
+	line-height:40px;
+}
+#userForm input[type='text']{
+	width:30%;
+}
+
+/*header*/
+.navbar{
+	height:100px;
+	background-color:#00a0f5;
+}
+.navbar h2{
+	color:#fff;
+	float:right;
+	margin-top:60px;
+	margin-left:25px;
+	margin-bottom:0;
+}
+
+
+.navbar-default {
+	background-color: #00a0f5;
+}
+.navbar-default a{
+	color:#fff
+}
+.sidebar-nav{
+	background-color:#eef0f2 			
+}
+.sidebar-nav a{
+	color:#00a0f5;	
+}
+.navbar-default a:hover{
+	/*background-color: #00a0f5;*/
+	background-color:#d9dee8;
+}
+.sidebar {
+	/*margin-top: 100px;*/
+	overflow-x:hidden;
+	width: 250px;
+}
+.sidebar ul li {
+	/*border-bottom: 1px solid #50afe1;*/
+	border-bottom: 1px solid #e7e7e7;
+}
+.nav > li > a:focus, .nav > li > a:hover {
+	/*background-color: #50afe1;*/
+	background:none;
+	color:#0055be;
+	text-decoration: none;
+}
+.sidebar ul li a.active {
+	/*background-color: #50afe1;*/
+	background:none;
+	color:#0055be
+}
+.nav .open > a, .nav .open > a:focus, .nav .open > a:hover{	
+	background:none;
+	color:#0055be
+}
+.copyright{
+	/*color:#fff*/
+	color:#78879b
+}
+.navbar-top-links{
+	margin-top:50px;
+}
+
+.navbar-header a:hover{
+	background:none
+}
+.btn-blue.focus, .btn-blue:focus, .btn-blue:hover {
+    color: #fff;
+    text-decoration: none;
+}
+li.dropdown > a {
+	color: #fff;
+}
+#footer {
+	/*border: 1px solid #50afe1;*/
+	border: 1px solid #e7e7e7;
+		}
+		
+.pagination > .active > a, .pagination > .active > a:focus, .pagination > .active > a:hover, .pagination > .active > span, .pagination > .active > span:focus, .pagination > .active > span:hover {
+    z-index: 3;
+    color: #fff;
+    cursor: default;
+    background-color: #00a0f5;
+    border-color: #00a0f5;
+}		
+.btn-blue{
+	background-color: #00a0f5;
+	border-color: #00a0f5;
+	color:#fff
+}	
+.btn-gray{
+	background-color: #4b5564;
+	border-color: #4b5564;
+	color:#fff
+}
+.page-header {
+   border-bottom: 1px solid #eef0f2;
+}
+.searchForm{
+	/*border-bottom: 1px solid #eef0f2;*/
+	margin-left:0px;
+}
+.normalInput {
+	height:30px;
+	width:70%
+}
+.tableLabel{
+	line-height:30px;
+	margin:0;
+	/*min-width:150px;*/
+}
+.searchDiv5 > div{
+	margin-bottom:5px;
+}
+.buttonSpace{
+	/*margin-top:15px;*/
+}
+
+
+/*.searchDiv div{padding-bottom:15px;}*/
+
+.dropdown-toggle .fa-fw{font-size:18px;}
+
+.bs-callout-danger h4 {
+    color: #ce4844;
+}  
+.table_panel{overflow-x:auto}
+.table > tbody > tr > td, .table > tbody > tr > th, .table > tfoot > tr > td, .table > tfoot > tr > th, .table > thead > tr > td, .table > thead > tr > th {
+    vertical-align: middle;
+}
+
+td:first-child{text-align:center}
+
+
+.tooltip-inner{
+	background-color:#00a0f5;
+}
+
+.tooltip.top .tooltip-arrow{
+	border-top-color:#00a0f5;
+}
+
+.tooltip.bottom .tooltip-arrow{
+	border-bottom-color:#00a0f5;
+}
+.xsmallLabel{width:80px;}
+.smallLabel{width:100px;}
+.normalLabel{width:180px;}
+
+
+/*show hide left menu*/
+#showHideDiv{
+	border-left: 1px solid #e7e7e7;
+	max-height:25px;
+	background-color: #fff;
+    margin: 0 0 0 252px;
+    padding: 10px 0 0 30px;
+    position: inherit;
+    color:#72849a
+}
+#showHideDiv a{	
+    color:#72849a;
+    cursor: pointer;
+    font-family: tktype;
+    text-decoration: none;
+}
+#showHideDiv a:hover{	
+    color:#333
+}
+#resizeDiv{ width:3px; left: 250px;position:absolute;margin:0 0 50px 0; cursor:w-resize;} 
+#resizeDiv:hover{ cursor:w-resize;} 
+#resizeDiv:active{ cursor:w-resize;} 
+
+#myModal,#myModal_cg{ 
+	 padding:0px;
+	 background-color: #fff;
+	 width: 700px; 
+	 position: fixed; 
+	 margin: auto auto; 
+	 top: 75px; 
+	 left: 0px; 
+	 bottom: 75px; 
+	 right: 0px; 
+	 z-index: 1050; 
+	 height:auto;
+	 min-height:810px;
+	 overflow-y: auto; 
+ } 
+ 
+ #profile_card{ 
+     padding:0px;
+     background-color: #fff;
+     width: 700px; 
+     position: fixed; 
+     margin-left: -350px; 
+     top: 75px; 
+     left: 50%; 
+     bottom: 75px; 
+     min-height:800px;
+ }
+ 
+ #cg_mapping{ 	 
+	padding:0px;
+	background-color: #fff;
+	width: 1000px;  
+	position: fixed; 
+	margin-left:-500px;
+	top: 75px; 
+	left: 50%; 
+	bottom: 75px; 
+	right: 0px; 
+	z-index: 1050; 
+	height:auto;
+	min-height:810px;
+	overflow-y: auto; 
+ } 
+#cg_mapping_header:hover{
+	cursor:move;
+}
+ #copy_modal{    
+    padding:0px;
+    background-color: #fff;
+    width: 600px;  
+    position: fixed; 
+    top: 300px; 
+    left: 50%; 
+    margin-left:-300px;
+    z-index: 1150; 
+    height:350px;
+    overflow-y: auto;
+ }
+ 
+ #selectSupplierModal{    
+    padding:0px;
+    background-color: #fff;
+    top: 175px;
+    width: 600px;
+    height:500px; 
+    left: 50%; 
+    margin-left:-300px; 
+ }
+ #import_excel{
+    padding:0px;
+    background-color: #fff;
+    top:175px;
+    width:400px;
+    height:200px;
+ }
+ 
+ #cg_list_modal{    
+    padding:0px;
+    background-color: #fff;
+    top: 175px;
+    width: 600px;
+    height:500px; 
+    left: 50%; 
+    margin-left:-300px; 
+ }
+ 
+ #copy_modal_header,#profile_card_header,#selectSupplierModalHeader,#add_modal_header:hover,#cgMapping_import_header,#cg_list_header{
+ cursor:move;
+ }
+ 
+.cg_mapping_div{height:600px;  padding-left:15px;padding-right:15px;margin-left:0px}
+#cg_mapping_button{height:600px;vertical-align: middle; }
+.cg_mapping_table{border:1px solid #ccc; height:590px;overflow-y: auto;}
+.supplier_table{border:1px solid #ccc;  height:350px;overflow-y:auto}
+.cg_list_table{border:1px solid #ccc;  height:350px;overflow-y:auto}
+
+
+ .modal-header {padding: 0 0 0 15px; }
+ .modal-body{margin:0;}
+ #myTabContent{padding-top:15px;}
+ 
+input[disabled], input[readonly]{
+    background-color: #eee;
+}
+
+ @media screen and (max-width: 1366px) {
+	html{font-size:12px}
+	.h1, h1 {
+	    font-size: 2rem;
+	} 
+	.table > tbody > tr > td, .table > tfoot > tr > td,  .table > thead > tr > td{padding:0px;}
+	td button{padding: 2px 4px;}
+	
+    #myModal,#myModal_cg{ 
+    	padding:0px;
+		background-color: #fff;	
+		width: 700px;  
+		position: fixed; 
+		margin: auto auto; 
+		top: 125px; 
+		left: 0px; 
+		bottom: 125px; 
+		right: 0px; 
+		z-index: 1050; 
+		height:auto;
+		min-height:515px;
+		overflow-y: scroll; 
+	 } 
+	 
+	 #profile_card{ 
+	     padding:0px;
+	     background-color: #fff;
+	     width: 700px; 
+	     position: fixed; 
+	     margin-left: -350px; 
+	     top: 75px; 
+	     left: 50%; 
+	     bottom: 75px;  
+	     min-height:800px;
+     }
+	 
+	 #cg_mapping{ 	 
+		padding:0px;
+		background-color: #fff;
+		width: 1000px;  
+		position: fixed; 
+		margin-left:-500px; 
+		top: 100px; 
+		left: 50%;
+		bottom: 100px; 
+		right: 0px; 
+		z-index: 1050; 
+		max-height:600px;
+		min-height:600px;
+	 }
+	 
+	 #copy_modal{   
+	    padding:0px;
+	    background-color: #fff;
+	    width: 600px;  
+	    position: fixed; 
+	    top: 75px; 
+	    left: 50%; 
+	    margin-left:-300px;
+	    bottom: 75px; 
+	    right: 0px; 
+	    z-index: 1050; 
+	    height:350px;
+	    overflow-y: auto; 
+	 }
+	 
+	 #selectSupplierModal{    
+	    padding:0px;
+	    background-color: #fff;
+	    top: 175px;
+	    width: 600px;  
+	    height:500px;
+	    left: 50%; 
+	    margin-left:-300px; 
+     } 
+     
+     #import_excel{
+	    padding:0px;
+	    background-color: #fff;
+	    top:175px;
+	    width:400px;
+	    height:200px;
+	 } 
+	 
+	 #cg_list_modal{    
+	    padding:0px;
+	    background-color: #fff;
+	    top: 175px;
+	    width: 600px;
+	    height:500px; 
+	    left: 50%; 
+	    margin-left:-300px; 
+	 }
+	 .cg_mapping_div{max-height:400px; padding-left:5px;padding-right:5px;margin-left:0px}
+	 #cg_mapping_button{min-height:300px;vertical-align: middle; }
+	 .cg_mapping_table{border:1px solid #ccc;height:400px; overflow-y:auto}
+	 .supplier_table{border:1px solid #ccc;  height:350px;overflow-y:auto}
+	 .cg_list_table{border:1px solid #ccc;  height:350px;overflow-y:auto}
+}
+@media screen and (max-height: 900px) {
+	body{overflow-x:hidden}
+    html{font-size:12px}
+    .h1, h1 {
+        font-size: 2rem;
+    } 
+    .table > tbody > tr > td, .table > tfoot > tr > td,  .table > thead > tr > td{padding:0px;}
+    td button{padding: 2px 4px;}
+    #myModal,#myModal_cg{ 	 
+		padding:0px;
+		background-color: #fff;
+		width: 900px;  
+		position: fixed; 
+		margin: auto auto; 
+		top: 125px; 
+		left: 0px; 
+		bottom: 125px; 
+		right: 0px; 
+		z-index: 1050; 
+		height:auto;
+		min-height:515px;
+		overflow-y: auto; 
+	 } 
+	 
+	 #profile_card{     
+        padding:0px;
+	    background-color: #fff;
+	    width: 700px; 
+	    position: fixed; 
+	    margin-left: -350px; 
+	    top: 75px; 
+	    left: 50%; 
+	    bottom: 75px; 
+	    min-height:800px;
+     }
+     
+	 #cg_mapping{ 	 
+		padding:0px;
+		background-color: #fff;
+		width: 1000px;  
+		position: fixed; 
+		margin-left:-500px;
+		top: 100px; 
+		left: 50%; 
+		bottom: 100px; 
+		right: 0px;
+		z-index: 1050; 
+		max-height:600px;
+		min-height:600px;
+	 } 
+	 
+	 #copy_modal{   
+        padding:0px;
+        background-color: #fff;
+        width: 600px;  
+        position: fixed; 
+        left: 50%; 
+        margin-left:-300px;
+        top: 100px; 
+        bottom: 100px; 
+        height:350px;
+        right: 0px; 
+        z-index: 1050; 
+     }
+     
+     #selectSupplierModal{    
+	    padding:0px;
+	    background-color: #fff;
+	    top: 175px;
+	    width: 600px; 
+	    height:500px;
+        left: 50%; 
+	    margin-left:-300px; 
+	 }
+	 
+	 #import_excel{
+	    padding:0px;
+	    background-color: #fff;
+	    top:175px;
+	    width:400px;
+	    height:200px;
+	 }
+	 
+	 #cg_list_modal{    
+	    padding:0px;
+	    background-color: #fff;
+	    top: 175px;
+	    width: 600px;
+	    height:500px; 
+	    left: 50%; 
+	    margin-left:-300px; 
+	 } 
+	 
+	 .cg_mapping_div{height:400px;  padding-left:15px;padding-right:15px;margin-left:0px}
+	 #cg_mapping_button{height:400px;vertical-align: middle; }
+	 .cg_mapping_table{border:1px solid #ccc;  height:400px;overflow-y:auto}
+	 .supplier_table{border:1px solid #ccc;  height:350px;overflow-y:auto}
+	 .cg_list_table{border:1px solid #ccc;  height:350px;overflow-y:auto}
+	 
+}
+
+.icon-calendar{
+    background-position: -192px -120px;
+     background-image: url("../images/glyphicons-halflings.png");
+    background-repeat: no-repeat;
+    display: inline-block;
+    height: 14px;
+    line-height: 14px;
+    margin-top: 1px;
+    vertical-align: text-top;
+    width: 14px;
+}
+[class^="icon-"], [class*=" icon-"] {
+    background-image: url("../images/glyphicons-halflings.png");
+    background-position: 14px 14px;
+    background-repeat: no-repeat;
+    display: inline-block;
+    height: 14px;
+    line-height: 14px;
+    margin-top: 1px;
+    vertical-align: text-top;
+    width: 14px;
+}
+.icon-calendar{
+    background-position: -192px -120px;
+}
+
+
+.input-append input, .input-append select, .input-append .uneditable-input {
+    border-radius: 4px 0 0 4px;
+}
+.input-append input{
+	margin-bottom: 0;
+    position: relative;
+    vertical-align: top;
+	font-size: 14px;
+    border: 1px solid #ccc;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    transition: border 0.2s linear 0s, box-shadow 0.2s linear 0s;
+    padding: 6px 12px;
+    height: 30px;
+    display: inline-block;
+    margin-left: 0;
+}
+.input-append, .input-prepend {
+    white-space: nowrap;
+}
+input[disabled], select[disabled], textarea[disabled], input[readonly], select[readonly], textarea[readonly] {
+    background-color: #eee;
+    cursor: not-allowed;
+}
+.input-append .add-on, .input-append .btn, .input-append .btn-group {
+    margin-left: -4px;
+}
+.input-append .add-on, .input-prepend .add-on, .input-append .btn, .input-prepend .btn, .input-append .btn-group > .dropdown-toggle, .input-prepend .btn-group > .dropdown-toggle {
+    border-radius: 0;
+    vertical-align: top;
+}
+.input-append .add-on, .input-prepend .add-on {
+    background-color: #eee;
+    border: 1px solid #ccc;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: normal;
+    height: 30px;
+    min-width: 16px;
+    padding: 4px 5px;
+    text-align: center;
+    text-shadow: 0 1px 0 #fff;
+    width: auto;
+}
+
+.input-append .add-on:last-child, .input-append .btn:last-child, .input-append .btn-group:last-child > .dropdown-toggle {
+    border-radius: 0 4px 4px 0;
+}
+
+.icon-arrow-right {
+    background-position: -264px -96px;
+}
+
+.icon-arrow-left {
+    background-position: -240px -96px;
+}
+
+#add_modal{
+	    position: fixed; 
+	    top: 175px; 
+	    left: 50%; 
+	    margin-left:-200px;
+	    z-index: 1049; 
+	    overflow-y: auto; 
+	    width:400px;
+	    height:400px;
+}
+.cg_mapping_add {
+    background-color: #fff;
+    min-height: 568px;
+    padding: 0 15px;
+}
+@media screen and (max-height: 900px) {
+	.cg_mapping_add {
+	    padding: 6px 30px;
+	    min-height: 368px;
+	}
+	#add_modal{
+		    position: fixed; 
+		    top: 175px; 
+		    left: 50%; 
+		    margin-left:-250px;
+		    overflow-y: auto; 
+		   min-width:500px;
+		    height:400px;
+		    width:500px;
+	}
+}
+@media screen and (max-width: 1366px) {
+	.cg_mapping_add {
+	    min-height: 368px;
+	    padding: 6px 15px;
+	}
+	#add_modal{
+	    position: fixed; 
+	    top: 175px; 
+	    left: 50%; 
+	    margin-left:-250px;
+	    overflow-y: auto; 
+	    min-width:500px;
+	    height:400px;
+	    width:500px;
+	}
+}
+
+
