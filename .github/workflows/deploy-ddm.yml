@@ -16,5 +16,5 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'app-kr-pdm-ea-prod-001'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DDM }}
           package: ddm/.
